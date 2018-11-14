@@ -61,6 +61,7 @@ func (blabber *Blabber) StartAudio() {
 	}()
 
 	for{
+		fmt.Printf("SubPeers: %d, ", len(blabber.transport.Pubsub.ListPeers(blabber.currentTopic)))
 		fmt.Printf("Peers: %d\n", len(blabber.transport.Rnode.Network().Peers()))
 		time.Sleep(time.Second)
 	}
