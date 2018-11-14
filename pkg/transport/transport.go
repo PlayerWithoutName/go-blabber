@@ -9,7 +9,7 @@ import (
 	"gx/ipfs/QmR8BauakNcBa3RbE4nbQu76PDiJgoQgz8AJdhJuiU4TAw/go-cid"
 	"gx/ipfs/QmRKLtwMw131aK7ugC3G7ybpumMz78YrJe5dzneyindvG1/go-multiaddr"
 	"gx/ipfs/QmVvV8JQmmqPCwXAaesWJPheUiEFQJ9HWRhWhuFuxVQxpR/go-libp2p"
-	"gx/ipfs/QmVvV8JQmmqPCwXAaesWJPheUiEFQJ9HWRhWhuFuxVQxpR/go-libp2p/p2p/host/routed"
+	"gx/ipfs/QmZBH87CAPFHcc7cYmBqeSQ98zQ3SX9KUxiYgzPmLWNVKz/go-libp2p-routing"
 	"gx/ipfs/QmahxMNoNuSsgQefo9rkpcfRFmQrMN6Q99aztKXf63K7YJ/go-libp2p-host"
 	"gx/ipfs/Qmc3BYVGtLs8y3p4uVpARWyo3Xk2oCBFF1AhYUVMPWgwUK/go-libp2p-pubsub"
 	"gx/ipfs/QmerPMzPk1mJVowm8KgmoknWa4yCYvvugMPsgWmDNUvDLW/go-multihash"
@@ -30,41 +30,40 @@ var BootstrapAddresses = []string{
 }
 
 type Transport struct {
-	node      *host.Host
 	dhtclient *dht.IpfsDHT
-	Rnode     *routedhost.RoutedHost
+	Node      host.Host
 	Pubsub    *pubsub.PubSub
 
 	CurrentTopic *pubsub.Subscription
 }
 
 func Connect(ctx context.Context) (*Transport, error) {
-	node, err := libp2p.New(ctx)
+	var dhtclient *dht.IpfsDHT
+	node, err := libp2p.New(ctx, libp2p.Routing(func(bh host.Host) (routing.PeerRouting, error) {
+		dht, err := dht.New(ctx, bh, dhtopts.Client(false))
+		if err != nil {
+			return nil, err
+		}
+		dhtclient = dht
+		return dht, err
+	}))
 	if err != nil {
 		return nil, err
 	}
 
-	dhtclient, err := dht.New(ctx, node, dhtopts.Client(false))
+	pubSub, err := pubsub.NewFloodSub(ctx, node, pubsub.WithStrictSignatureVerification(false))
 	if err != nil {
 		return nil, err
 	}
 
-	rnode := routedhost.Wrap(node, dhtclient)
-
-	err = bootstrapDHT(ctx, rnode)
-	if err != nil {
-		return nil, err
-	}
-
-	pubSub, err := pubsub.NewFloodSub(ctx, rnode, pubsub.WithStrictSignatureVerification(false))
+	err = bootstrapDHT(ctx, node)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Transport{
-		node:      &node,
+		Node:      node,
 		dhtclient: dhtclient,
-		Rnode:     rnode,
 		Pubsub:    pubSub,
 	}, nil
 }
@@ -76,7 +75,7 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 	}
 
 	fmt.Printf("Prov: %s\n", c.String())
-    fmt.Printf("Self: /ipfs/%s\n", transport.Rnode.ID().Pretty())
+    fmt.Printf("Self: /ipfs/%s\n", transport.Node.ID().Pretty())
 
 	go func() {
 		transport.dhtclient.Provide(ctx, c, true)
@@ -89,7 +88,7 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 				for _, a := range peerInfo.Addrs {
 					fmt.Println(a)
 				}
-				err := transport.Rnode.Connect(ctx, peerInfo)
+				err := transport.Node.Connect(ctx, peerInfo)
 				fmt.Printf("dial status: %s\n", err)
 			}()
 		}
@@ -105,7 +104,7 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 	return nil
 }
 
-func bootstrapDHT(ctx context.Context, node *routedhost.RoutedHost) error {
+func bootstrapDHT(ctx context.Context, node host.Host) error {
 	/*ctx, cancel := context.WithCancel(ctx)
 	defer cancel()*/
 
@@ -134,7 +133,6 @@ func bootstrapDHT(ctx context.Context, node *routedhost.RoutedHost) error {
 }
 
 func (transport *Transport) Close() {
-	transport.Rnode.Close()
-	(*transport.node).Close()
+	transport.Node.Close()
 	transport.dhtclient.Close()
 }
