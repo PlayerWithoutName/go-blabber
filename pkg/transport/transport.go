@@ -75,7 +75,7 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 	}
 
 	fmt.Printf("Prov: %s\n", c.String())
-    fmt.Printf("Self: /ipfs/%s\n", transport.Node.ID().Pretty())
+	fmt.Printf("Self: /ipfs/%s\n", transport.Node.ID().Pretty())
 
 	go func() {
 		transport.dhtclient.Provide(ctx, c, true)

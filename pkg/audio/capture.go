@@ -37,7 +37,6 @@ func PrepareDefaultSource() (*Source, error) {
 	enc.SetMaxBandwidth(bandwidth)
 	enc.SetInBandFEC(true)
 
-
 	return &Source{
 		SourceChannel: make(chan []byte),
 		ErrorChannel:  make(chan error, 1),
@@ -54,7 +53,6 @@ func (source *Source) StartCapture() {
 		if err != nil {
 			source.ErrorChannel <- err
 		}
-
 
 		opusBuffer := make([]byte, 100)
 		samples := make([]int16, captureSize)

@@ -42,7 +42,7 @@ func (blabber *Blabber) SetTopic(topic string) error {
 
 func (blabber *Blabber) StartAudio() {
 	go func() {
-		for buffer := range blabber.audio.Source.SourceChannel{
+		for buffer := range blabber.audio.Source.SourceChannel {
 			blabber.transport.Pubsub.Publish(blabber.currentTopic, buffer)
 		}
 	}()
@@ -54,7 +54,7 @@ func (blabber *Blabber) StartAudio() {
 				panic(err)
 			}
 
-			if peer.ID(msg.From).Pretty() != blabber.transport.Node.ID().Pretty(){
+			if peer.ID(msg.From).Pretty() != blabber.transport.Node.ID().Pretty() {
 				blabber.audio.Sink.SinkChannel <- msg.Data
 			}
 		}
@@ -63,7 +63,7 @@ func (blabber *Blabber) StartAudio() {
 	blabber.audio.Sink.StartPlayback()
 	blabber.audio.Source.StartCapture()
 
-	for{
+	for {
 		fmt.Printf("SubPeers: %d, ", len(blabber.transport.Pubsub.ListPeers(blabber.currentTopic)))
 		fmt.Printf("Peers: %d\n", len(blabber.transport.Node.Network().Peers()))
 		time.Sleep(time.Second)

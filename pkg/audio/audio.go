@@ -29,12 +29,12 @@ func (audio *Audio) StartLoopback() {
 		}
 	}()
 
-	for{
+	for {
 		select {
-			case err := <- audio.Source.ErrorChannel:
-				panic(err)
-			case err := <- audio.Sink.ErrorChannel:
-				panic(err)
+		case err := <-audio.Source.ErrorChannel:
+			panic(err)
+		case err := <-audio.Sink.ErrorChannel:
+			panic(err)
 		}
 	}
 }
