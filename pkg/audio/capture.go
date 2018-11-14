@@ -54,14 +54,13 @@ func (source *Source) StartCapture() {
 		}
 
 
-		opusBuffer := make([]byte, 35)
+		opusBuffer := make([]byte, 100)
 		samples := make([]int16, captureSize)
 		for {
 
 			if source.device.CapturedSamples() >= captureSize {
 				source.device.CaptureToInt16(samples)
 				len, err := source.encoder.Encode(samples, opusBuffer)
-				println(len)
 				if err != nil {
 					source.ErrorChannel <- err
 				}

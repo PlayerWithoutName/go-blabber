@@ -62,11 +62,11 @@ func (sink *Sink) StartPlayback() error {
 	go func() {
 		decodedData := make([]int16, captureSize)
 		for data := range sink.SinkChannel {
-			len, err := sink.decoder.Decode(data, decodedData)
+			_, err := sink.decoder.Decode(data, decodedData)
 			if err != nil {
 				sink.ErrorChannel <- err
 			}
-			fmt.Printf("%d in\n", len)
+			//fmt.Printf("%d in\n", len)
 
 			buffer := <-bufferChannel
 
