@@ -3,14 +3,16 @@ package audio
 import (
 	"fmt"
 	"github.com/timshannon/go-openal/openal"
+	"gopkg.in/hraban/opus.v2"
 )
 
 type Sink struct {
-	SinkChannel chan []byte
+	SinkChannel  chan []byte
 	ErrorChannel chan error
 
 	device  *openal.Device
 	context *openal.Context
+	decoder *opus.Decoder
 }
 
 func PrepareDefaultSink() (*Sink, error) {
@@ -23,15 +25,21 @@ func PrepareDefaultSink() (*Sink, error) {
 		return nil, err
 	}
 
+	dec, err := opus.NewDecoder(frequency, channels)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Sink{
-		device:  dev,
-		context: context,
-		SinkChannel:make(chan []byte),
-		ErrorChannel:make(chan error, 1),
+		SinkChannel:  make(chan []byte),
+		ErrorChannel: make(chan error, 1),
+		device:       dev,
+		context:      context,
+		decoder:      dec,
 	}, nil
 }
 
-func (sink *Sink) StartPlayback() error{
+func (sink *Sink) StartPlayback() error {
 	source := openal.NewSource()
 	err := openal.Err()
 	if err != nil {
@@ -52,10 +60,17 @@ func (sink *Sink) StartPlayback() error{
 	}
 
 	go func() {
+		decodedData := make([]int16, captureSize)
 		for data := range sink.SinkChannel {
-			buffer := <- bufferChannel
+			len, err := sink.decoder.Decode(data, decodedData)
+			if err != nil {
+				sink.ErrorChannel <- err
+			}
+			fmt.Printf("%d in\n", len)
 
-			buffer.SetData(openal.FormatMono8, data, 44100)
+			buffer := <-bufferChannel
+
+			buffer.SetData(format, data, frequency)
 			err = openal.Err()
 			if err != nil {
 				fmt.Println("SetData")
