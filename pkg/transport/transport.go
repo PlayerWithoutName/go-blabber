@@ -11,7 +11,6 @@ import (
 	"gx/ipfs/QmXnpYYg2onGLXVxM4Q5PEFcx29k8zeJQkPeLAk9h9naxg/go-libp2p/p2p/host/routed"
 	"gx/ipfs/QmadRyQYRn64xHb5HKy2jRFp2Der643Cgo7NEjFgs4MX2k/go-libp2p-kad-dht"
 	"gx/ipfs/QmadRyQYRn64xHb5HKy2jRFp2Der643Cgo7NEjFgs4MX2k/go-libp2p-kad-dht/opts"
-	"gx/ipfs/QmcqU6QUDSXprb1518vYDGczrTJTyGwLG9eUa5iNX4xUtS/go-libp2p-peer"
 	"gx/ipfs/QmdQmRSSAGmZvBcbETygeTbsqLLn4k69ELvTxVbEiZxGmA/go-libp2p-pubsub"
 	"gx/ipfs/QmerPMzPk1mJVowm8KgmoknWa4yCYvvugMPsgWmDNUvDLW/go-multihash"
 )
@@ -99,18 +98,6 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 		return err
 	}
 	transport.CurrentTopic = sub
-	go func() {
-		for {
-			msg, err := sub.Next(ctx)
-			if peer.ID(msg.From).Pretty() == transport.Rnode.ID().Pretty() {
-				continue
-			}
-			if err != nil {
-				panic(err)
-			}
-			println(string(msg.Data) + "-" + string(peer.ID(msg.From).Pretty()))
-		}
-	}()
 	return nil
 }
 
