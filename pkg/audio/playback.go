@@ -55,7 +55,7 @@ func (sink *Sink) StartPlayback() error{
 		for data := range sink.SinkChannel {
 			buffer := <- bufferChannel
 
-			buffer.SetData(openal.FormatStereo16, data, 96000)
+			buffer.SetData(openal.FormatMono8, data, 44100)
 			err = openal.Err()
 			if err != nil {
 				fmt.Println("SetData")

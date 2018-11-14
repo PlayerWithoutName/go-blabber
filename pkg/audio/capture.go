@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	frequency    = 96000
-	format       = openal.FormatStereo16
-	captureSize  = 256
+	frequency    = 44100
+	format       = openal.FormatMono8
+	captureSize  = 512
 )
 
 type Source struct {
