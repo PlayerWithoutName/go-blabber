@@ -60,6 +60,9 @@ func (blabber *Blabber) StartAudio() {
 		}
 	}()
 
+	blabber.audio.Sink.StartPlayback()
+	blabber.audio.Source.StartCapture()
+
 	for{
 		fmt.Printf("SubPeers: %d, ", len(blabber.transport.Pubsub.ListPeers(blabber.currentTopic)))
 		fmt.Printf("Peers: %d\n", len(blabber.transport.Rnode.Network().Peers()))
