@@ -70,7 +70,7 @@ func (sink *Sink) StartPlayback() error {
 
 			buffer := <-bufferChannel
 
-			buffer.SetData(format, data, frequency)
+			buffer.SetDataInt16(format, decodedData, frequency)
 			err = openal.Err()
 			if err != nil {
 				fmt.Println("SetData")
