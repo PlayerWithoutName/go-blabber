@@ -55,7 +55,10 @@ func (blabber *Blabber) StartAudio() {
 			}
 
 			if peer.ID(msg.From).Pretty() != blabber.transport.Node.ID().Pretty() {
-				blabber.audio.Sink.SinkChannel <- msg.Data
+				blabber.audio.Sink.SinkChannel <- &au.Packet{
+					Data: msg.Data,
+					Source: peer.ID(msg.From).Pretty(),
+				}
 			}
 		}
 	}()
