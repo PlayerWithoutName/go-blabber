@@ -6,9 +6,16 @@ import (
 	"gopkg.in/hraban/opus.v2"
 )
 
+type Packet struct {
+	Source string
+	Data   []byte
+}
+
 type Sink struct {
-	SinkChannel  chan []byte
+	SinkChannel  chan *Packet
 	ErrorChannel chan error
+
+	sources map[string]openal.Source
 
 	device  *openal.Device
 	context *openal.Context
@@ -31,7 +38,7 @@ func PrepareDefaultSink() (*Sink, error) {
 	}
 
 	return &Sink{
-		SinkChannel:  make(chan []byte),
+		SinkChannel:  make(chan *Packet),
 		ErrorChannel: make(chan error, 1),
 		device:       dev,
 		context:      context,
@@ -40,15 +47,15 @@ func PrepareDefaultSink() (*Sink, error) {
 }
 
 func (sink *Sink) StartPlayback() error {
-	source := openal.NewSource()
+	/*Source := openal.NewSource()
 	err := openal.Err()
 	if err != nil {
 		return err
 	}
-	source.SetLooping(false)
+	Source.SetLooping(false)*/
 
 	buffers := openal.NewBuffers(40)
-	err = openal.Err()
+	err := openal.Err()
 	if err != nil {
 		return err
 	}
@@ -61,8 +68,19 @@ func (sink *Sink) StartPlayback() error {
 
 	go func() {
 		decodedData := make([]int16, captureSize)
-		for data := range sink.SinkChannel {
-			_, err := sink.decoder.Decode(data, decodedData)
+		for packet := range sink.SinkChannel {
+			source, ok := sink.sources[packet.Source]
+			if !ok {
+				source = openal.NewSource()
+				err := openal.Err()
+				if err != nil {
+					sink.ErrorChannel <- err
+				}
+				source.SetLooping(false)
+				sink.sources[packet.Source] = source
+			}
+
+			_, err := sink.decoder.Decode(packet.Data, decodedData)
 			if err != nil {
 				sink.ErrorChannel <- err
 			}

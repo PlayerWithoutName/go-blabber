@@ -25,7 +25,10 @@ func SetupAudio() (*Audio, error) {
 func (audio *Audio) StartLoopback() {
 	go func() {
 		for sample := range audio.Source.SourceChannel {
-			audio.Sink.SinkChannel <- sample
+			audio.Sink.SinkChannel <- &Packet{
+				Data:   sample,
+				Source: "loopback",
+			}
 		}
 	}()
 
