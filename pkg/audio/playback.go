@@ -40,6 +40,7 @@ func PrepareDefaultSink() (*Sink, error) {
 	return &Sink{
 		SinkChannel:  make(chan *Packet),
 		ErrorChannel: make(chan error, 1),
+		sources:      make(map[string]openal.Source),
 		device:       dev,
 		context:      context,
 		decoder:      dec,
