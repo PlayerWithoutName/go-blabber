@@ -32,7 +32,7 @@ func PrepareDefaultSource() (*Source, error) {
 		return nil, err
 	}
 
-	enc.SetBitrateToMax()
+	enc.SetBitrate(bitrate)
 	enc.SetComplexity(complexity)
 	enc.SetMaxBandwidth(bandwidth)
 	enc.SetInBandFEC(true)
