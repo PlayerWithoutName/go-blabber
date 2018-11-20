@@ -59,7 +59,7 @@ func Connect(ctx context.Context) (*Transport, error) {
 		return nil, err
 	}
 
-	pubSub, err := pubsub.NewFloodSub(ctx, node, pubsub.WithStrictSignatureVerification(true))
+	pubSub, err := pubsub.NewGossipSub(ctx, node, pubsub.WithStrictSignatureVerification(true))
 	if err != nil {
 		return nil, err
 	}
