@@ -42,7 +42,7 @@ type Transport struct {
 
 func Connect(ctx context.Context) (*Transport, error) {
 	var dhtclient *dht.IpfsDHT
-	node, err := libp2p.New(ctx, libp2p.Transport(libp2pquic.NewTransport), libp2p.Routing(func(bh host.Host) (routing.PeerRouting, error) {
+	node, err := libp2p.New(ctx, libp2p.DefaultTransports, libp2p.Transport(libp2pquic.NewTransport), libp2p.Routing(func(bh host.Host) (routing.PeerRouting, error) {
 		d, err := dht.New(ctx, bh, dhtopts.Client(true))
 		if err != nil {
 			return nil, err
