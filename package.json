@@ -59,6 +59,12 @@
       "hash": "QmcqU6QUDSXprb1518vYDGczrTJTyGwLG9eUa5iNX4xUtS",
       "name": "go-libp2p-peer",
       "version": "2.4.3"
+    },
+    {
+      "author": "marten-seemann",
+      "hash": "QmWY1pHdRP1rA2ifUuCu1ZwFJ8ZzpSEcgXsu9haH21AYKd",
+      "name": "go-libp2p-quic-transport",
+      "version": "0.2.13"
     }
   ],
   "gxVersion": "0.14.0",
