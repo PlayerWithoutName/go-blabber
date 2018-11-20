@@ -3,12 +3,14 @@ package transport
 import (
 	"context"
 	"fmt"
+
 	"gx/ipfs/QmQAGG1zxfePqj2t7bLxyN8AFccZ889DDR9Gn8kVLDrGZo/go-libp2p-peerstore"
 	"gx/ipfs/QmQsw6Nq2A345PqChdtbWVoYbSno7uqRDHwYmYpbPHmZNc/go-libp2p-kad-dht"
 	"gx/ipfs/QmQsw6Nq2A345PqChdtbWVoYbSno7uqRDHwYmYpbPHmZNc/go-libp2p-kad-dht/opts"
 	"gx/ipfs/QmR8BauakNcBa3RbE4nbQu76PDiJgoQgz8AJdhJuiU4TAw/go-cid"
 	"gx/ipfs/QmRKLtwMw131aK7ugC3G7ybpumMz78YrJe5dzneyindvG1/go-multiaddr"
 	"gx/ipfs/QmVvV8JQmmqPCwXAaesWJPheUiEFQJ9HWRhWhuFuxVQxpR/go-libp2p"
+	"gx/ipfs/QmWY1pHdRP1rA2ifUuCu1ZwFJ8ZzpSEcgXsu9haH21AYKd/go-libp2p-quic-transport"
 	"gx/ipfs/QmZBH87CAPFHcc7cYmBqeSQ98zQ3SX9KUxiYgzPmLWNVKz/go-libp2p-routing"
 	"gx/ipfs/QmahxMNoNuSsgQefo9rkpcfRFmQrMN6Q99aztKXf63K7YJ/go-libp2p-host"
 	"gx/ipfs/Qmc3BYVGtLs8y3p4uVpARWyo3Xk2oCBFF1AhYUVMPWgwUK/go-libp2p-pubsub"
@@ -27,6 +29,7 @@ var BootstrapAddresses = []string{
 	"/ip6/2604:a880:800:10::4a:5001/tcp/4001/ipfs/QmSoLV4Bbm51jM9C4gDYZQ9Cy3U6aXMJDAbzgu2fzaDs64", // venus.i.ipfs.io
 	"/ip6/2a03:b0c0:0:1010::23:1001/tcp/4001/ipfs/QmSoLer265NRgSp2LA3dPaeykiS1J6DifTC88f5uVQKNAd", // earth.i.ipfs.io
 	"/ip4/10.1.2.197/tcp/4001/ipfs/QmZatNPNW8DnpMRgSuUJjmzc6nETJi21c2quikh4jbmPKk",                // m6k ipfs node
+	"/ip4/51.75.35.194/udp/4001/quic/ipfs/QmVGX47BzePPqEzpkTwfUJogPZxHcifpSXsGdgyHjtk5t7",         // m6k potato
 }
 
 type Transport struct {
@@ -39,12 +42,17 @@ type Transport struct {
 
 func Connect(ctx context.Context) (*Transport, error) {
 	var dhtclient *dht.IpfsDHT
-	node, err := libp2p.New(ctx, libp2p.Routing(func(bh host.Host) (routing.PeerRouting, error) {
-		d, err := dht.New(ctx, bh, dhtopts.Client(false))
+	node, err := libp2p.New(ctx, libp2p.Transport(libp2pquic.NewTransport), libp2p.Routing(func(bh host.Host) (routing.PeerRouting, error) {
+		d, err := dht.New(ctx, bh, dhtopts.Client(true))
 		if err != nil {
 			return nil, err
 		}
+		if err := d.Bootstrap(ctx); err != nil {
+			return nil, err
+		}
+
 		dhtclient = d
+
 		return d, err
 	}))
 	if err != nil {
@@ -83,14 +91,14 @@ func (transport *Transport) Join(ctx context.Context, topic string) error {
 	go func() {
 		pc := transport.dhtclient.FindProvidersAsync(ctx, c, 80)
 		for peerInfo := range pc {
-			go func() {
+			go func(peerInfo peerstore.PeerInfo) {
 				fmt.Printf("dialing %s, %d\n", peerInfo.ID.Pretty(), len(peerInfo.Addrs))
 				for _, a := range peerInfo.Addrs {
 					fmt.Println(a)
 				}
 				err := transport.Node.Connect(ctx, peerInfo)
 				fmt.Printf("dial status: %s\n", err)
-			}()
+			}(peerInfo)
 		}
 		fmt.Println("discovery done")
 
