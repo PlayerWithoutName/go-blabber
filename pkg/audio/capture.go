@@ -10,7 +10,7 @@ const (
 	frequency   = 48000
 	format      = openal.FormatMono16
 	captureSize = 480
-	bitrate     = 20000
+	bitrate     = 5000
 	complexity  = 10
 	bandwidth   = opus.Fullband
 	channels    = 1
@@ -32,7 +32,7 @@ func PrepareDefaultSource() (*Source, error) {
 		return nil, err
 	}
 
-	enc.SetBitrateToMax()
+	enc.SetBitrate(bitrate)
 	enc.SetComplexity(complexity)
 	enc.SetMaxBandwidth(bandwidth)
 	enc.SetInBandFEC(true)
