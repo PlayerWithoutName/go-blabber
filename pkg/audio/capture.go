@@ -10,9 +10,9 @@ const (
 	frequency   = 48000
 	format      = openal.FormatMono16
 	captureSize = 480
-	bitrate     = 5000
+	bitrate     = 64000
 	complexity  = 10
-	bandwidth   = opus.Fullband
+	bandwidth   = opus.SuperWideband
 	channels    = 1
 )
 
